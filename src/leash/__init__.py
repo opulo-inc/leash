@@ -5,12 +5,16 @@ APP_NAME = 'Leash'  # Application name in texts meant to be human readable
 APP_URL = 'https://github.com/opulo-inc/'
 
 
-from .hardware.lumen import Lumen
+from .lumen import Lumen
 
 def main():
 
     lumen = Lumen()
-    print(lumen.connect())
+
+    lumen.connect()
+
+
+    lumen.photon.scan()
 
 
 if __name__ == '__main__':

@@ -1,15 +1,16 @@
 
-
-import re
-from ..base import util
+import re, time
+from .logger import Logger
 from .photon import Photon
 import serial
 import serial.tools.list_ports
 
 class Lumen():
 
-    def __init__(self):
+    def __init__(self, debug=True):
         self._instance = None
+
+        self.log = Logger(debug)
 
         self._bootCommands = [
             "G90",
@@ -38,7 +39,7 @@ class Lumen():
         self._ser.baudrate = 119200
         self._ser.timeout = 1
 
-        self.photon = Photon(self)
+        self.photon = Photon(self, self.log)
 
     @classmethod
     def getInstance(cls):
@@ -55,8 +56,44 @@ class Lumen():
     def connect(self):
         if self.scanPorts():
             if self.openSerial():
+                self.sendBootCommands()
                 return True
+            
         return False
+    
+    def waitForEmptyPlanner(self):
+        messages = [
+            "M400"
+            "M118 E1 done"
+        ]
+
+        # send messages
+        for i in messages:
+            self.send(i)
+
+        #wait for done to arrive with timeout
+        start = time.perf_counter()
+
+        while True:
+            response = self._ser.readline().decode('utf-8')
+            reMatch = re.search("echo: done", response)
+            if reMatch is not None:
+                break
+
+            if time.perf_counter() - start > 3:
+                break
+
+    def goto(self, x=None, y=None, z=None):
+        command = "G0"
+        if x is not None:
+            command = command + " X" + str(x)
+        if y is not None:
+            command = command + " Y" + str(y)
+        if z is not None:
+            command = command + " Z" + str(z)
+
+        self.send(command)
+
 
     def scanPorts(self):
 
@@ -69,7 +106,7 @@ class Lumen():
                 try:
                     s = serial.Serial(port)
                     s.close()
-                    util.info("Found motherboard at port: " + " with hwid: " + hwid)
+                    self.log.info("Found motherboard at port: " + " with hwid: " + hwid)
                     self._ser.port = port
                     return True
 
@@ -80,22 +117,22 @@ class Lumen():
 
     def openSerial(self):
         if self._ser.is_open:
-            util.info("Serial port already open")
+            self.log.info("Serial port already open")
             return True
         
         if self._ser.port != "":
             self._ser.open()
-            self._ser.timeout = 0.25
+            self._ser.timeout = 1
         else:
-            util.error("No serial port selected")
+            self.log.error("No serial port selected")
             return False
 
         if self._ser.is_open:
-            util.info("Connected to machine over serial port: " + self._ser.port)
+            self.log.info("Connected to machine over serial port: " + self._ser.port)
             self._ser.read_all()
             return True
         else:
-            util.error("Couldn't open serial port")
+            self.log.error("Couldn't open serial port")
             return False
 
     def disconnect(self):
@@ -112,10 +149,9 @@ class Lumen():
 
         for i in self._bootCommands:
             if not self.send(i):
-               util.error("Halted sending boot commands because sending failed.")
+               self.log.error("Halted sending boot commands because sending failed.")
                break
 
-        self.closeSerial()
 
     def sendPreHomingCommands(self):
 
@@ -124,10 +160,32 @@ class Lumen():
 
         for i in self._preHomeCommands:
             if not self.send(i):
-               util.error("Halted sending pre homing commands because sending failed.")
+               self.log.error("Halted sending pre homing commands because sending failed.")
                break
 
-        self.closeSerial()
+    def home(self, x = True, y = True, z = True):
+
+        self.log.info("Homing")
+
+        self.sendPreHomingCommands()
+
+        if x and y and z:
+            self.send("G28")
+        else:
+            if x or y or z:
+                command = "G28"
+                if x:
+                    command = command + " X"
+                if y:
+                    command = command + " Y"
+                if z:
+                    command = command + " Z"
+
+                self.send(command)
+        
+        self.sendPostHomingCommands
+
+        self.waitForEmptyPlanner()
 
     def sendPostHomingCommands(self):
 
@@ -136,10 +194,8 @@ class Lumen():
 
         for i in self._postHomeCommands:
             if not self.send(i):
-               util.error("Halted sending post homing commands because sending failed.")
+               self.log.error("Halted sending post homing commands because sending failed.")
                break
-
-        self.closeSerial()
 
     def send(self, message):
         # send can return two things
@@ -152,10 +208,9 @@ class Lumen():
             encoded = message.encode('utf-8')
             self._ser.write(encoded + b'\n')
             resp = self._ser.readline().decode('utf-8')
-            print(str(resp))
             return resp
         else:
-            print("Serial port isn't open.")
+            self.log.error("Serial port isn't open.")
             return False
         
     def sendBlind(self, message):
@@ -165,7 +220,7 @@ class Lumen():
             self._ser.write(encoded + b'\n')
             return True
         else:
-            print("Serial port isn't open.")
+            self.log.error("Serial port isn't open.")
             return False
 
     def send_rtn_lines(self, message):
@@ -179,113 +234,69 @@ class Lumen():
             encoded = message.encode('utf-8')
             self._ser.write(encoded + b'\n')
             resp = self._ser.readlines()
-            print(str(resp))
             decoded_resp = ""
             i = 0
             while i < len(resp):
-                print(str(resp[i]))
                 decoded_resp = decoded_resp + resp[i].decode('utf-8')
                 i = i + 1
             return decoded_resp
         else:
-            print("Serial port isn't open.")
+            self.log.error("Serial port isn't open.")
             return False
         
 
     def readLeftVac(self): # returns vacuum sensor value for left vac
 
-        self.sendBootCommands();
+        try:
+            #selects vac 1 through multiplexer
+            self.send("M260 A112 B1 S1")
 
-        #selects vac 1 through multiplexer
-        self.send("M260 A112 B1 S1")
+            #read addresses 0x06 0x07 and 0x08 for pressure reading
+            self.send("M260 A109 B6 S1")
+            msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-        #read addresses 0x06 0x07 and 0x08 for pressure reading
-        self.send("M260 A109 B6 S1")
-        msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+            self.send("M260 A109 B7 S1")
+            csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-        self.send("M260 A109 B7 S1")
-        csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+            self.send("M260 A109 B8 S1")
+            lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-        self.send("M260 A109 B8 S1")
-        lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+            val = msb.group(1)+csb.group(1)+lsb.group(1)
 
-        val = msb.group(1)+csb.group(1)+lsb.group(1)
+            result = int(val, 16)
 
-        print("regex concat")
-        print(val)
+            if(result & (1 << 23)):
+                result = result - 2**24
 
-        val = int("0x" + val, 16)
-
-        print("convert from hex")
-        print(val)
-        print(str(bin(val)))
-
-        sign = (val >> 23) & 1
-
-        print("sign")
-        print(sign)
-
-        if (sign):
-            sign = 1
-        else:
-            sign = -1
-
+            return result
+        except Exception as e: 
+            print(e)
+            return False
         
-        print(sign)
+    def readRightVac(self): # returns vacuum sensor value for left vac
 
-        val &= ~(1 << 23)
+        try:
+            #selects vac 1 through multiplexer
+            self.send("M260 A112 B2 S1")
 
-        print("clearing msb")
-        print(val)
-        print(str(bin(val)))
+            #read addresses 0x06 0x07 and 0x08 for pressure reading
+            self.send("M260 A109 B6 S1")
+            msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-        return val * sign
+            self.send("M260 A109 B7 S1")
+            csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-    def readRightVac(self): # returns vacuum sensor value for right vac
-        
-        self.sendBootCommands();
+            self.send("M260 A109 B8 S1")
+            lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
 
-        #selects vac 1 through multiplexer
-        self.send("M260 A112 B2 S1")
+            val = msb.group(1)+csb.group(1)+lsb.group(1)
 
-        #read addresses 0x06 0x07 and 0x08 for pressure reading
-        self.send("M260 A109 B6 S1")
-        msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+            result = int(val, 16)
 
-        self.send("M260 A109 B7 S1")
-        csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+            if(result & (1 << 23)):
+                result = result - 2**24
 
-        self.send("M260 A109 B8 S1")
-        lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-        val = msb.group(1)+csb.group(1)+lsb.group(1)
-        
-        print("regex concat")
-        print(val)
-
-        val = int("0x" + val, 16)
-
-        print("convert from hex")
-        print(val)
-        print(str(bin(val)))
-
-        sign = (val >> 23) & 1
-
-        print("sign")
-        print(sign)
-
-        if (sign):
-            sign = 1
-        else:
-            sign = -1
-
-        
-        print(sign)
-
-        val &= ~(1 << 23)
-
-        print("clearing msb")
-        print(val)
-        print(str(bin(val)))
-
-        return val * sign
+            return result
+        except Exception as e: 
+            print(e)
+            return False
