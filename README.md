@@ -20,7 +20,7 @@ To install (ideally in a virtual environment), use:
 From here, it's easy to connect to a Lumen:
 
 ```python
-from leash.hardware.lumen import Lumen
+from leash.lumen import Lumen
 
 myLumen = Lumen()
 
@@ -29,3 +29,8 @@ if myLumen.connect():
     print(myLumen.photon.activeFeeders)
 
 ```
+
+TODO
+
+- uvc support https://github.com/jtfrey/uvc-util/tree/master
+- 

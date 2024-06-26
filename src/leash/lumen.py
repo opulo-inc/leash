@@ -1,13 +1,15 @@
 
-import re, time
+import re, time, serial, cv2
+import numpy as np
+import serial.tools.list_ports
+
 from .logger import Logger
 from .photon import Photon
-import serial
-import serial.tools.list_ports
+from .camera import Camera
 
 class Lumen():
 
-    def __init__(self, debug=True):
+    def __init__(self, debug=True, topCam = True, botCam = True):
         self._instance = None
 
         self.log = Logger(debug)
@@ -24,7 +26,8 @@ class Lumen():
             "M260 B48",
             "M260 B27",
             "M260 S1",
-            "G0 F35000"
+            "G0 F50000",
+            "M204 T4000"
         ]
 
         self._preHomeCommands = [
@@ -40,6 +43,12 @@ class Lumen():
         self._ser.timeout = 1
 
         self.photon = Photon(self, self.log)
+
+        if topCam:
+            self.topCam = Camera(0)
+
+        if botCam:
+            self.botCam = Camera(1)
 
     @classmethod
     def getInstance(cls):
@@ -60,6 +69,13 @@ class Lumen():
                 return True
             
         return False
+    
+    def disconnect(self):
+        self._ser.close()
+        if self._ser.is_open:
+            return False
+        else:
+            return True
     
     def waitForEmptyPlanner(self):
         messages = [
@@ -134,13 +150,6 @@ class Lumen():
         else:
             self.log.error("Couldn't open serial port")
             return False
-
-    def disconnect(self):
-        self._ser.close()
-        if self._ser.is_open:
-            return False
-        else:
-            return True
         
     def sendBootCommands(self):
 
@@ -300,3 +309,4 @@ class Lumen():
         except Exception as e: 
             print(e)
             return False
+            

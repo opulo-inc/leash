@@ -19,8 +19,6 @@ class Commands(enum.IntEnum):
     PROGRAM_FEEDER_FLOOR = 0xc2
     UNINITIALIZED_FEEDERS_RESPOND = 0xc3
 
-
-
 class Photon():
 
     def __init__(self, mobo, log):

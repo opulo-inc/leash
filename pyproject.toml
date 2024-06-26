@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = 'Control API for the LumenPnP'
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MIT"
+license = "MPLv2"
 keywords = []
 authors = [
   { name = "Stephen Hawes", email = "sphawes@gmail.com" },
@@ -24,7 +24,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+  "pyserial",
+  "opencv-python"
+]
 
 [project.urls]
 Documentation = "https://github.com/unknown/leash#readme"
@@ -38,7 +41,8 @@ path = "src/leash/__about__.py"
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
-  "pyserial"
+  "pyserial",
+  "opencv-python"
 ]
 
 [tool.hatch.envs.default.scripts]
