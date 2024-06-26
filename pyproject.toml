@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = 'Control API for the LumenPnP'
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MPLv2"
+license = {text = "MPLv2"}
 keywords = []
 authors = [
   { name = "Stephen Hawes", email = "sphawes@gmail.com" },
