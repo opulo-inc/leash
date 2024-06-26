@@ -91,9 +91,11 @@ class Lumen():
 
         #wait for done to arrive with timeout
         start = time.perf_counter()
+        print("sent m400")
 
         while True:
             response = self._ser.readline().decode('utf-8')
+            print(response)
             reMatch = re.search("echo:done", response)
             if reMatch is not None:
                 break
