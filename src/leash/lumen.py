@@ -87,21 +87,22 @@ class Lumen():
 
         # send messages
         for i in messages:
-            self.send(i)
+            response = self.send(i)
+            reMatch = re.search("echo:done", response)
+            if reMatch is not None:
+                return True
 
         #wait for done to arrive with timeout
         start = time.perf_counter()
-        print("sent m400")
 
         while True:
             response = self._ser.readline().decode('utf-8')
-            print(response)
             reMatch = re.search("echo:done", response)
             if reMatch is not None:
-                break
+                return True
 
             if time.perf_counter() - start > timeout:
-                break
+                return False
 
     def goto(self, x=None, y=None, z=None, a=None, b=None):
         command = "G0"
