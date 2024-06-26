@@ -66,8 +66,10 @@ class Lumen():
         if self.scanPorts():
             if self.openSerial():
                 self.sendBootCommands()
+                self.log.info("Connected to a Lumen")
                 return True
             
+        self.log.error("Was unable to connect to a Lumen")
         return False
     
     def disconnect(self):
@@ -77,9 +79,9 @@ class Lumen():
         else:
             return True
     
-    def waitForEmptyPlanner(self):
+    def finishMoves(self, timeout=3):
         messages = [
-            "M400"
+            "M400",
             "M118 E1 done"
         ]
 
@@ -92,14 +94,14 @@ class Lumen():
 
         while True:
             response = self._ser.readline().decode('utf-8')
-            reMatch = re.search("echo: done", response)
+            reMatch = re.search("echo:done", response)
             if reMatch is not None:
                 break
 
-            if time.perf_counter() - start > 3:
+            if time.perf_counter() - start > timeout:
                 break
 
-    def goto(self, x=None, y=None, z=None):
+    def goto(self, x=None, y=None, z=None, a=None, b=None):
         command = "G0"
         if x is not None:
             command = command + " X" + str(x)
@@ -107,6 +109,10 @@ class Lumen():
             command = command + " Y" + str(y)
         if z is not None:
             command = command + " Z" + str(z)
+        if z is not None:
+            command = command + " A" + str(a)
+        if z is not None:
+            command = command + " B" + str(b)
 
         self.send(command)
 
@@ -129,6 +135,7 @@ class Lumen():
                 except (OSError, serial.SerialException):
                     pass
 
+        self.log.error("Was unable to find a connected Lumen")
         return False
 
     def openSerial(self):
@@ -192,9 +199,7 @@ class Lumen():
 
                 self.send(command)
         
-        self.sendPostHomingCommands
-
-        self.waitForEmptyPlanner()
+        self.sendPostHomingCommands()
 
     def sendPostHomingCommands(self):
 

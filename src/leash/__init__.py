@@ -4,7 +4,6 @@ CMD_NAME = 'leash'  # Lower case command and module name
 APP_NAME = 'Leash'  # Application name in texts meant to be human readable
 APP_URL = 'https://github.com/opulo-inc/'
 
-
 def main():
     pass
     
