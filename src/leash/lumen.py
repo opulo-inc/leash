@@ -7,6 +7,7 @@ from .serial import SerialManager
 from .photon import Photon
 from .camera import Camera
 from .pump import Pump
+from .light import Light
 
 class Lumen():
 
@@ -19,6 +20,9 @@ class Lumen():
 
         self.leftPump = Pump("LEFT", self.sm, self.log)
         self.rightPump = Pump("RIGHT", self.sm, self.log)
+
+        self.topLight = Light("TOP", self.sm, self.log)
+        self.botLight = Light("BOT", self.sm, self.log)
 
         if topCam:
             self.topCam = Camera(0)
