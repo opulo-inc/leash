@@ -21,11 +21,11 @@ class Commands(enum.IntEnum):
 
 class Photon():
 
-    def __init__(self, mobo, log):
+    def __init__(self, sm, log):
 
+        self.sm = sm
         self.log = log
-
-        self._mobo = mobo
+        
         self._packetID = 0x00
 
         self._outstandingPackets = []
@@ -108,8 +108,8 @@ class Photon():
         self.log.info("Gcode to send: " + str(gcode))
 
         # open serial, send packet, close it
-        self._mobo._ser.read_all()
-        response = self._mobo.send(gcode).strip()
+        self.sm._ser.read_all()
+        response = self.sm.send(gcode).strip()
 
         self.incrementPacketID()
 

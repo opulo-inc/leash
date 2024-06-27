@@ -1,18 +1,31 @@
-
-import re, time, serial, cv2
-import numpy as np
-import serial.tools.list_ports
+"""Lumen object, containing all other subsystems
+"""
 
 from .logger import Logger
+from .serial import SerialManager
+
 from .photon import Photon
 from .camera import Camera
+from .pump import Pump
 
 class Lumen():
 
-    def __init__(self, debug=True, topCam = True, botCam = True):
-        self._instance = None
+    def __init__(self, debug=True, topCam = False, botCam = False):
 
         self.log = Logger(debug)
+
+        self.sm = SerialManager()
+        self.photon = Photon(self.sm, self.log)
+
+        self.leftPump = Pump("LEFT", self.sm, self.log)
+        self.rightPump = Pump("RIGHT", self.sm, self.log)
+
+        if topCam:
+            self.topCam = Camera(0)
+
+        if botCam:
+            self.botCam = Camera(1)
+
 
         self._bootCommands = [
             "G90",
@@ -38,71 +51,30 @@ class Lumen():
             "M115"
         ]
 
-        self._ser = serial.Serial()
-        self._ser.baudrate = 119200
-        self._ser.timeout = 1
-
-        self.photon = Photon(self, self.log)
-
-        if topCam:
-            self.topCam = Camera(0)
-
-        if botCam:
-            self.botCam = Camera(1)
-
-    @classmethod
-    def getInstance(cls):
-        if not cls._instance:
-            cls._instance = Lumen()
-
-        return cls._instance
-
 
 #####################
 # Serial
 #####################
 
     def connect(self):
-        if self.scanPorts():
-            if self.openSerial():
+        if self.sm.scanPorts():
+            if self.sm.openSerial():
                 self.sendBootCommands()
-                self.log.info("Connected to a Lumen")
                 return True
             
-        self.log.error("Was unable to connect to a Lumen")
         return False
     
     def disconnect(self):
-        self._ser.close()
-        if self._ser.is_open:
+        self.sm._ser.close()
+        if self.sm._ser.is_open:
             return False
         else:
             return True
+        
+    def finishMoves(self):
+
+        self.sm.clearQueue()
     
-    def finishMoves(self, timeout=3):
-        messages = [
-            "M400",
-            "M118 E1 done"
-        ]
-
-        # send messages
-        for i in messages:
-            response = self.send(i)
-            reMatch = re.search("echo:done", response)
-            if reMatch is not None:
-                return True
-
-        #wait for done to arrive with timeout
-        start = time.perf_counter()
-
-        while True:
-            response = self._ser.readline().decode('utf-8')
-            reMatch = re.search("echo:done", response)
-            if reMatch is not None:
-                return True
-
-            if time.perf_counter() - start > timeout:
-                return False
 
     def goto(self, x=None, y=None, z=None, a=None, b=None):
         command = "G0"
@@ -119,66 +91,19 @@ class Lumen():
 
         self.send(command)
 
-
-    def scanPorts(self):
-
-        comports = serial.tools.list_ports.comports()
-
-        device_id = "0483:5740"
-
-        for port, desc, hwid in sorted(comports):
-            if device_id in hwid:
-                try:
-                    s = serial.Serial(port)
-                    s.close()
-                    self.log.info("Found motherboard at port: " + " with hwid: " + hwid)
-                    self._ser.port = port
-                    return True
-
-                except (OSError, serial.SerialException):
-                    pass
-
-        self.log.error("Was unable to find a connected Lumen")
-        return False
-
-    def openSerial(self):
-        if self._ser.is_open:
-            self.log.info("Serial port already open")
-            return True
-        
-        if self._ser.port != "":
-            self._ser.open()
-            self._ser.timeout = 1
-        else:
-            self.log.error("No serial port selected")
-            return False
-
-        if self._ser.is_open:
-            self.log.info("Connected to machine over serial port: " + self._ser.port)
-            self._ser.read_all()
-            return True
-        else:
-            self.log.error("Couldn't open serial port")
-            return False
         
     def sendBootCommands(self):
 
-        if not self._ser.is_open:
-            self.openSerial()
-
         for i in self._bootCommands:
-            if not self.send(i):
+            if not self.sm.send(i):
                self.log.error("Halted sending boot commands because sending failed.")
                break
 
 
     def sendPreHomingCommands(self):
 
-        if not self._ser.is_open:
-            self.openSerial()
-
         for i in self._preHomeCommands:
-            if not self.send(i):
+            if not self.sm.send(i):
                self.log.error("Halted sending pre homing commands because sending failed.")
                break
 
@@ -189,7 +114,7 @@ class Lumen():
         self.sendPreHomingCommands()
 
         if x and y and z:
-            self.send("G28")
+            self.sm.send("G28")
         else:
             if x or y or z:
                 command = "G28"
@@ -200,121 +125,16 @@ class Lumen():
                 if z:
                     command = command + " Z"
 
-                self.send(command)
+                self.sm.send(command)
         
         self.sendPostHomingCommands()
 
     def sendPostHomingCommands(self):
 
-        if not self._ser.is_open:
-            self.openSerial()
-
         for i in self._postHomeCommands:
-            if not self.send(i):
+            if not self.sm.send(i):
                self.log.error("Halted sending post homing commands because sending failed.")
                break
-
-    def send(self, message):
-        # send can return two things
-        # it can return bool False if port isnt open
-        # or it can respond with marlin's response
         
-        #check to see if serial port is open
-        if self._ser.is_open:
-            self._ser.reset_input_buffer()
-            encoded = message.encode('utf-8')
-            self._ser.write(encoded + b'\n')
-            resp = self._ser.readline().decode('utf-8')
-            return resp
-        else:
-            self.log.error("Serial port isn't open.")
-            return False
-        
-    def sendBlind(self, message):
-        if self._ser.is_open:
-            self._ser.reset_input_buffer()
-            encoded = message.encode('utf-8')
-            self._ser.write(encoded + b'\n')
-            return True
-        else:
-            self.log.error("Serial port isn't open.")
-            return False
-
-    def send_rtn_lines(self, message):
-        # send can return two things
-        # it can return bool False if port isnt open
-        # or it can respond with marlin's response
-        
-        #check to see if serial port is open
-        if self._ser.is_open:
-            self._ser.reset_input_buffer()
-            encoded = message.encode('utf-8')
-            self._ser.write(encoded + b'\n')
-            resp = self._ser.readlines()
-            decoded_resp = ""
-            i = 0
-            while i < len(resp):
-                decoded_resp = decoded_resp + resp[i].decode('utf-8')
-                i = i + 1
-            return decoded_resp
-        else:
-            self.log.error("Serial port isn't open.")
-            return False
-        
-
-    def readLeftVac(self): # returns vacuum sensor value for left vac
-
-        try:
-            #selects vac 1 through multiplexer
-            self.send("M260 A112 B1 S1")
-
-            #read addresses 0x06 0x07 and 0x08 for pressure reading
-            self.send("M260 A109 B6 S1")
-            msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            self.send("M260 A109 B7 S1")
-            csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            self.send("M260 A109 B8 S1")
-            lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            val = msb.group(1)+csb.group(1)+lsb.group(1)
-
-            result = int(val, 16)
-
-            if(result & (1 << 23)):
-                result = result - 2**24
-
-            return result
-        except Exception as e: 
-            print(e)
-            return False
-        
-    def readRightVac(self): # returns vacuum sensor value for left vac
-
-        try:
-            #selects vac 1 through multiplexer
-            self.send("M260 A112 B2 S1")
-
-            #read addresses 0x06 0x07 and 0x08 for pressure reading
-            self.send("M260 A109 B6 S1")
-            msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            self.send("M260 A109 B7 S1")
-            csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            self.send("M260 A109 B8 S1")
-            lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
-
-            val = msb.group(1)+csb.group(1)+lsb.group(1)
-
-            result = int(val, 16)
-
-            if(result & (1 << 23)):
-                result = result - 2**24
-
-            return result
-        except Exception as e: 
-            print(e)
-            return False
-            
+    def safeZ(self):
+        self.goto(z=31.5)
