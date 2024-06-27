@@ -1,7 +1,7 @@
 """Manager for a Lumen camera
 """
 
-import cv2, 
+import cv2
 import numpy as np
 
 class Camera():
