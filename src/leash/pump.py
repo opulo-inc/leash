@@ -20,13 +20,13 @@ class Pump():
 
                 #read addresses 0x06 0x07 and 0x08 for pressure reading
                 self.sm.send("M260 A109 B6 S1")
-                msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                msb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 self.sm.send("M260 A109 B7 S1")
-                csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                csb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 self.sm.send("M260 A109 B8 S1")
-                lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                lsb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 val = msb.group(1)+csb.group(1)+lsb.group(1)
 
@@ -48,13 +48,13 @@ class Pump():
 
                 #read addresses 0x06 0x07 and 0x08 for pressure reading
                 self.sm.send("M260 A109 B6 S1")
-                msb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                msb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 self.sm.send("M260 A109 B7 S1")
-                csb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                csb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 self.sm.send("M260 A109 B8 S1")
-                lsb = re.search("data:(..)", self.send("M261 A109 B1 S1"))
+                lsb = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
 
                 val = msb.group(1)+csb.group(1)+lsb.group(1)
 
@@ -65,7 +65,7 @@ class Pump():
 
                 return result
             except Exception as e: 
-                self.log.error(e)
+                print(e)
                 return False
 
 
