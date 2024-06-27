@@ -89,7 +89,7 @@ class Lumen():
         if z is not None:
             command = command + " B" + str(b)
 
-        self.send(command)
+        self.sm.send(command)
 
         
     def sendBootCommands(self):
