@@ -6,11 +6,13 @@ import serial, time, re
 
 class SerialManager():
 
-    def __init__(self):
+    def __init__(self, log):
 
         self._ser = serial.Serial()
         self._ser.baudrate = 119200
         self._ser.timeout = 1
+
+        self.log = log
 
     def clearQueue(self, timeout=3):
         messages = [

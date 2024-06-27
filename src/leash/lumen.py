@@ -14,7 +14,7 @@ class Lumen():
 
         self.log = Logger(debug)
 
-        self.sm = SerialManager()
+        self.sm = SerialManager(self.log)
         self.photon = Photon(self.sm, self.log)
 
         self.leftPump = Pump("LEFT", self.sm, self.log)
