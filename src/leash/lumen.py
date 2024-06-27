@@ -55,6 +55,10 @@ class Lumen():
             "M115"
         ]
 
+        self.parkX = 220
+        self.parkY = 400
+        self.parkZ = 31.5
+
 
 #####################
 # Serial
@@ -76,7 +80,6 @@ class Lumen():
             return True
         
     def finishMoves(self):
-
         self.sm.clearQueue()
     
 
@@ -111,6 +114,18 @@ class Lumen():
                self.log.error("Halted sending pre homing commands because sending failed.")
                break
 
+    def idle(self):
+        self.leftPump.off()
+        self.rightPump.off()
+
+        self.topLight.off()
+        self.botLight.off()
+
+        self.safeZ()
+
+        self.goto(x=self.parkX, y=self.parkY)
+
+
     def home(self, x = True, y = True, z = True):
 
         self.log.info("Homing")
@@ -141,4 +156,4 @@ class Lumen():
                break
         
     def safeZ(self):
-        self.goto(z=31.5)
+        self.goto(z=self.parkZ)

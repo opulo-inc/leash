@@ -68,26 +68,27 @@ class Pump():
                 print(e)
                 return False
 
-
-
-    def toggle(self, command):
+    def off(self):
         if self.index == "LEFT":
-            if command:
-                # turn on pump
-                self.sm.send("M106")
-                # turn on valve
-                self.sm.send("M106 P1 S255")
-            else:
-                self.sm.send("M107 P1")
-                self.sm.send("M107")
+            self.sm.send("M107 P1")
+            self.sm.send("M107")
 
         elif self.index == "RIGHT":
-            if command:
-                #turn on pump
-                self.sm.send("M106 P2 S255")
-                #turn on valve
-                self.sm.send("M106 P3 S255")
-            else:
-                self.sm.send("M107 P2")
-                self.sm.send("M107 P3")
+            self.sm.send("M107 P2")
+            self.sm.send("M107 P3")
+
+
+    def on(self):
+        if self.index == "LEFT":
+            # turn on pump
+            self.sm.send("M106")
+            # turn on valve
+            self.sm.send("M106 P1 S255")
+
+        elif self.index == "RIGHT":
+            #turn on pump
+            self.sm.send("M106 P2 S255")
+            #turn on valve
+            self.sm.send("M106 P3 S255")
+ 
             
