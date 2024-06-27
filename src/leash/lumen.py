@@ -1,5 +1,6 @@
 """Lumen object, containing all other subsystems
 """
+import time
 
 from .logger import Logger
 from .serial import SerialManager
@@ -81,6 +82,10 @@ class Lumen():
         
     def finishMoves(self):
         self.sm.clearQueue()
+
+    def sleep(self, seconds):
+        self.finishMoves()
+        time.sleep(seconds)
     
 
     def goto(self, x=None, y=None, z=None, a=None, b=None):

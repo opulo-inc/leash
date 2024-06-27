@@ -34,36 +34,37 @@ if lumen.connect():
     lumen.goto(x=10 y=10)
     lumen.goto(z=20)
 
-    # Waits until all sent commands to the Lumen are complete
-    # helpful for letting delays in code also delay the Lumen
-    lumen.finishMoves()
-    # Causes Lumen to pause for a second because we just called finishMoves()
-    time.sleep(1)
-
     lumen.safeZ()
+
+    # To make sure Lumen actions align with your code timing, use lumen.sleep()
+    # This just makes sure all commands are complete before delaying
+    lumen.sleep(2)
+
+    # If you need more control, you can use lumen.finishMoves() which blocks until the Lumen's command queue is empty
+    lumen.finishMoves()
+    # You can then use any other delays or timing functions afterwards
+    time.sleep(1)
 
     # Pumps
 
-    lumen.leftPump.toggle(True)
-    time.sleep(1)
+    lumen.leftPump.on()
+    lumen.sleep(1)
     print(lumen.leftPump.read())
-    lumen.leftPump.toggle(False)
+    lumen.leftPump.off()
 
-    lumen.rightPump.toggle(True)
-    time.sleep(1)
+    lumen.rightPump.on()
+    lumen.sleep(1)
     print(lumen.rightPump.read())
-    lumen.rightPump.toggle(False)
+    lumen.rightPump.off()
 
     # Ring Lights
 
-    lumen.topLight.on(140, 60, 90)
-    lumen.finishMoves()
-    time.sleep(1)
+    lumen.topLight.on(140, 60, 90, 255)
+    lumen.sleep(1)
     lumen.topLight.off()
 
-    lumen.botLight.on(140, 60, 90)
-    lumen.finishMoves()
-    time.sleep(1)
+    lumen.botLight.on(140, 60, 90, 255)
+    lumen.sleep(1)
     lumen.botLight.off()
 
     # Feeders
