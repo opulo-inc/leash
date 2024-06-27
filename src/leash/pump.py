@@ -6,9 +6,6 @@ import re
 class Pump():
 
     def __init__(self, index, sm, log):
-
-        if index != "LEFT" or index != "RIGHT":
-            return False
         
         self.index = index
         self.sm = sm
