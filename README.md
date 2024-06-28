@@ -40,6 +40,15 @@ if lumen.connect():
 
         # To make sure Lumen actions align with your code timing, use lumen.sleep()
         # This just makes sure all commands are complete before delaying
+        # lumen.sleep() can be handy in situations where you want to keep a pump
+        # on for a certain amount of time, for example:
+        # 
+        #   lumen.rightPump.on()
+        #   lumen.sleep(1)
+        #   lumen.rightPump.readPressure()
+        #   lumen.rightPump.off() 
+        #
+
         lumen.sleep(2)
 
         # If you need more control, you can use lumen.finishMoves() which blocks until
@@ -52,21 +61,24 @@ if lumen.connect():
 
         lumen.leftPump.on()
         lumen.sleep(1)
-        print(lumen.leftPump.read())
+        print("Left sensor pressure: " + str(lumen.leftPump.getPressure()))
         lumen.leftPump.off()
 
         lumen.rightPump.on()
         lumen.sleep(1)
-        print(lumen.rightPump.read())
+        print("Right sensor pressure: " + str(lumen.rightPump.getPressure()))
         lumen.rightPump.off()
+
+        print("Left sensor temperature: " + str(lumen.leftPump.getTemperature())))
+        print("Right sensor temperature: " + str(lumen.rightPump.getTemperature()))
 
         # Ring Lights
 
-        lumen.topLight.on(140, 60, 90, 255)
+        lumen.topLight.on(218, 165, 32, 255)
         lumen.sleep(1)
         lumen.topLight.off()
 
-        lumen.botLight.on(140, 60, 90, 255)
+        lumen.botLight.on(218, 165, 32, 255)
         lumen.sleep(1)
         lumen.botLight.off()
 

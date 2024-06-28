@@ -11,7 +11,7 @@ class Pump():
         self.sm = sm
         self.log = log
 
-    def read(self):
+    def getPressure(self):
 
         if self.index == "LEFT":
             try:
@@ -67,6 +67,41 @@ class Pump():
             except Exception as e: 
                 print(e)
                 return False
+            
+    def getTemperature(self):
+
+        try:
+            if self.index == "LEFT":
+                #selects vac 1 through multiplexer
+                self.sm.send("M260 A112 B1 S1")
+            elif self.index == "RIGHT":
+                self.sm.send("M260 A112 B2 S1")
+
+            # Assuming sensor is an object or interface to communicate with the sensor
+            
+            # Read REG0x09 and REG0x0A
+            self.sm.send("M260 A109 B9 S1")
+            REG0x09 = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
+
+            self.sm.send("M260 A109 B10 S1")
+            REG0x0A = re.search("data:(..)", self.sm.send("M261 A109 B1 S1"))
+            
+            # Calculate the temperature ADC value
+            N = REG0x09 * 256 + REG0x0A
+            
+            # Determine if temperature is positive or negative
+            if N < 2**15:
+                # Temperature is positive
+                temperature = N / 256.0
+            else:
+                # Temperature is negative, apply the formula
+                temperature = (N - 2**16) / 256.0
+            
+            return temperature
+    
+        except Exception as e: 
+            print(e)
+            return False
 
     def off(self):
         if self.index == "LEFT":

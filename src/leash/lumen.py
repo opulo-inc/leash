@@ -53,7 +53,8 @@ class Lumen():
         ]
 
         self._postHomeCommands = [
-            "M115"
+            "M115",
+            "M204 T4000"
         ]
 
         self.parkX = 220
