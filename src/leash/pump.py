@@ -70,8 +70,8 @@ class Pump():
 
     def off(self):
         if self.index == "LEFT":
-            self.sm.send("M107 P1")
             self.sm.send("M107")
+            self.sm.send("M107 P1")
 
         elif self.index == "RIGHT":
             self.sm.send("M107 P2")
@@ -84,11 +84,15 @@ class Pump():
             self.sm.send("M106")
             # turn on valve
             self.sm.send("M106 P1 S255")
+            self.sm.send("G4 50")
+            self.sm.send("M106 P1 S150")
 
         elif self.index == "RIGHT":
             #turn on pump
             self.sm.send("M106 P2 S255")
             #turn on valve
             self.sm.send("M106 P3 S255")
+            self.sm.send("G4 50")
+            self.sm.send("M106 P3 S150")
  
             
