@@ -53,7 +53,6 @@ class Lumen():
         ]
 
         self._postHomeCommands = [
-            "M115",
             "M204 T4000"
         ]
 
@@ -151,6 +150,8 @@ class Lumen():
                     command = command + " Z"
 
                 self.sm.send(command)
+
+        self.finishMoves()
         
         self.sendPostHomingCommands()
 
