@@ -13,7 +13,7 @@ class Light():
 
         self.sm.send(f"M150 P0 R0 U0 B0 S{s}")
 
-    def on(self, r, g, b, a):
+    def on(self, r=255, g=255, b=255, a=255):
 
         s = 0 if self.index == "BOT" else 1
 

@@ -1,7 +1,7 @@
 """Manager for controlling and reading pressure from pumps
 """
 
-import re
+import re, time
 
 class Pump():
 
@@ -13,10 +13,23 @@ class Pump():
 
     def getPressure(self):
 
-        if self.index == "LEFT":
+        
             try:
-                #selects vac 1 through multiplexer
-                self.sm.send("M260 A112 B1 S1")
+                if self.index == "LEFT":
+                    #selects vac 1 through multiplexer
+                    self.sm.send("M260 A112 B1 S1")
+
+                elif self.index == "RIGHT":
+
+                    #selects vac 2 through multiplexer
+                    self.sm.send("M260 A112 B2 S1")
+
+                self.sm.send("M260 A109")
+                self.sm.send("M260 B48")
+                self.sm.send("M260 B27")
+                self.sm.send("M260 S1")
+
+                time.sleep(0.03)
 
                 #read addresses 0x06 0x07 and 0x08 for pressure reading
                 self.sm.send("M260 A109 B6 S1")
@@ -40,11 +53,10 @@ class Pump():
                 print(e)
                 return False
 
-        elif self.index == "RIGHT":
+        
 
             try:
-                #selects vac 1 through multiplexer
-                self.sm.send("M260 A112 B2 S1")
+                
 
                 #read addresses 0x06 0x07 and 0x08 for pressure reading
                 self.sm.send("M260 A109 B6 S1")
@@ -119,15 +131,15 @@ class Pump():
             self.sm.send("M106")
             # turn on valve
             self.sm.send("M106 P1 S255")
-            self.sm.send("G4 50")
-            self.sm.send("M106 P1 S150")
+            # self.sm.send("G4 50")
+            # self.sm.send("M106 P1 S150")
 
         elif self.index == "RIGHT":
             #turn on pump
             self.sm.send("M106 P2 S255")
             #turn on valve
             self.sm.send("M106 P3 S255")
-            self.sm.send("G4 50")
-            self.sm.send("M106 P3 S150")
+            # self.sm.send("G4 50")
+            # self.sm.send("M106 P3 S150")
  
             

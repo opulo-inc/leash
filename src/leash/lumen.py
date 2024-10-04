@@ -25,6 +25,14 @@ class Lumen():
         self.topLight = Light("TOP", self.sm, self.log)
         self.botLight = Light("BOT", self.sm, self.log)
 
+        self.position = {
+            "x": None, 
+            "y": None,
+            "z": None,
+            "a": 0,
+            "b": 0
+        }
+
         if topCam:
             self.topCam = Camera(0)
 
@@ -45,7 +53,8 @@ class Lumen():
             "M260 B27",
             "M260 S1",
             "G0 F50000",
-            "M204 T4000"
+            "M204 T4000",
+            "G90"
         ]
 
         self._preHomeCommands = [
@@ -87,22 +96,34 @@ class Lumen():
         self.finishMoves()
         time.sleep(seconds)
     
+#####################
+# Movement
+#####################
 
     def goto(self, x=None, y=None, z=None, a=None, b=None):
         command = "G0"
         if x is not None:
             command = command + " X" + str(x)
+            self.position["x"] = x
         if y is not None:
             command = command + " Y" + str(y)
+            self.position["y"] = y
         if z is not None:
             command = command + " Z" + str(z)
+            self.position["z"] = z
         if z is not None:
             command = command + " A" + str(a)
+            self.position["a"] = a
         if z is not None:
             command = command + " B" + str(b)
+            self.position["b"] = b
 
         self.sm.send(command)
 
+    def setSpeed(self, f=None):
+        if f is not None:
+            command = "G0 F" + str(f)
+            self.sm.send(command)
         
     def sendBootCommands(self):
 
@@ -139,6 +160,10 @@ class Lumen():
 
         if x and y and z:
             self.sm.send("G28")
+            self.position["x"] = 0
+            self.position["y"] = 0
+            self.position["z"] = 0
+
         else:
             if x or y or z:
                 command = "G28"
@@ -164,3 +189,68 @@ class Lumen():
         
     def safeZ(self):
         self.goto(z=self.parkZ)
+
+    def probe(self, nozzle, startZ = None):
+        # this function moves a given nozzle down until it detects a pressure change. it returns the XYZ position of the probed point
+        if nozzle == "LEFT":
+
+            if startZ is not None:
+                self.goto(z=startZ)
+            else:
+                self.safeZ()
+
+            self.leftPump.on()
+            self.sleep(0.5)
+
+            baseVac = self.leftPump.getPressure()
+
+            self.log.info("Calibrated probe ambient is " + str(baseVac))
+
+            while self.position["z"] >= 0.1:
+                # left nozzle, z value goes down
+                self.goto(z = self.position["z"] - 0.5)
+                self.sleep(0.05)
+
+                runningVac = self.leftPump.getPressure()
+
+                self.log.info("Probe vac value: " + str(runningVac))
+
+                if (abs(runningVac - baseVac) > 50000) and (runningVac is not False):
+                    print("we got here")
+                    
+
+                    roughProbe = self.position["z"] 
+
+                    self.goto(z = roughProbe + 1)
+
+                    self.sleep(0.2)
+
+                    while self.position["z"] > roughProbe:
+                        self.goto(z = self.position["z"] - 0.05)
+                        self.sleep(0.05)
+                        runningVac = self.leftPump.getPressure()
+                        
+
+                        self.log.info("Probe vac value: " + str(runningVac))
+
+                        if (abs(runningVac - baseVac) > 50000) and (runningVac is not False):
+
+                            self.leftPump.off()
+                            pos = [self.position["x"], self.position["y"], self.position["z"]]
+                            self.log.info("Found probe at " + str(pos))
+                            return pos
+
+            self.log.info("Couldn't find probe point")
+            self.leftPump.off()
+            return False
+            
+            
+    
+
+        elif nozzle == "RIGHT":
+            self.rightPump.on()
+
+
+        else:
+            self.log.error("probe() requires a nozzle of option either LEFT or RIGHT")
+
