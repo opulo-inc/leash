@@ -7,7 +7,7 @@ name = "leash"
 dynamic = ["version"]
 description = 'Control API for the LumenPnP'
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {text = "MPLv2"}
 keywords = []
 authors = [
@@ -42,7 +42,8 @@ dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
   "pyserial",
-  "opencv-python"
+  "opencv-python",
+  "numpy"
 ]
 
 [tool.hatch.envs.default.scripts]

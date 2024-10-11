@@ -8,12 +8,12 @@ class Logger():
 
     def error(self, message):
         if self.debug:
-            error_string = "ERROR - " + str(datetime.now()) + " - " + message
+            error_string = "ERROR - " + str(datetime.now()) + " - " + str(message)
             print(error_string)
 
     def info(self, message):
         if self.debug:
-            info_string = "INFO - " + str(datetime.now()) + " - " + message
+            info_string = "INFO - " + str(datetime.now()) + " - " + str(message)
             print(info_string)
 
     

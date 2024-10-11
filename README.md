@@ -11,6 +11,8 @@ It contains:
 - Full Photon bus control
 - Image capture from both cameras
 
+This library is subject to change with non-backwards compatible refactoring. It is still actively in development.
+
 ## Usage
 
 To install (ideally in a virtual environment), use:
@@ -24,7 +26,7 @@ It can help to include the `--force-reinstall` flag in this command to make sure
 From here, it's easy to connect to a Lumen:
 
 ```python
-from leash.lumen import Lumen
+from leash import Lumen
 
 lumen = Lumen()
 
@@ -54,7 +56,7 @@ if lumen.connect():
         # If you need more control, you can use lumen.finishMoves() which blocks until
         # the Lumen's command queue is empty
         lumen.finishMoves()
-        # You can then use any other delays or timing functions afterwards
+        # You can then use any other python specific delays or timing functions afterwards
         time.sleep(1)
 
         # Pumps
@@ -84,8 +86,8 @@ if lumen.connect():
 
         # Feeders
 
-        myLumen.photon.scan()
-        print(myLumen.photon.activeFeeders)
+        lumen.photon.scan()
+        print(lumen.photon.activeFeeders)
     
     except KeyboardInterrupt:
         lumen.idle()
