@@ -35,10 +35,10 @@ if lumen.connect():
         lumen.home()
 
         # .goto() sends a move command with any optional arguments x, y, z, a, and b
-        lumen.goto(x=10 y=10)
+        lumen.goto(x=10, y=10)
         lumen.goto(z=20)
 
-        lumen.safeZ()
+        lumen.safe_z()
 
         # To make sure Lumen actions align with your code timing, use lumen.sleep()
         # This just makes sure all commands are complete before delaying
@@ -55,41 +55,41 @@ if lumen.connect():
 
         # If you need more control, you can use lumen.finishMoves() which blocks until
         # the Lumen's command queue is empty
-        lumen.finishMoves()
+        lumen.finish_moves()
         # You can then use any other python specific delays or timing functions afterwards
         time.sleep(1)
 
         # Pumps
 
-        lumen.leftPump.on()
+        lumen.left_pump.on()
         lumen.sleep(1)
-        print("Left sensor pressure: " + str(lumen.leftPump.getPressure()))
-        lumen.leftPump.off()
+        print("Left sensor pressure: " + str(lumen.left_pump.get_pressure()))
+        lumen.left_pump.off()
 
-        lumen.rightPump.on()
+        lumen.right_pump.on()
         lumen.sleep(1)
-        print("Right sensor pressure: " + str(lumen.rightPump.getPressure()))
-        lumen.rightPump.off()
+        print("Right sensor pressure: " + str(lumen.right_pump.get_pressure()))
+        lumen.right_pump.off()
 
-        print("Left sensor temperature: " + str(lumen.leftPump.getTemperature())))
-        print("Right sensor temperature: " + str(lumen.rightPump.getTemperature()))
+        print("Left sensor temperature: " + str(lumen.left_pump.get_temperature())))
+        print("Right sensor temperature: " + str(lumen.right_pump.get_temperature()))
 
         # Ring Lights
 
-        lumen.topLight.on(218, 165, 32, 255)
+        lumen.top_light.on(218, 165, 32, 255)
         lumen.sleep(1)
-        lumen.topLight.off()
+        lumen.top_light.off()
 
-        lumen.botLight.on(218, 165, 32, 255)
+        lumen.bot_light.on(218, 165, 32, 255)
         lumen.sleep(1)
-        lumen.botLight.off()
+        lumen.bot_light.off()
 
         # Feeders
 
         lumen.photon.scan()
-        print(lumen.photon.activeFeeders)
-    
-    except KeyboardInterrupt:
+        print(lumen.photon.active_feeders)
+
+        except KeyboardInterrupt:
         lumen.idle()
 
 
