@@ -1,7 +1,8 @@
 import enum
 import re
 
-from src.leash import log, SerialManager
+from leash.serial import SerialManager
+from leash.utils import log
 
 
 class Commands(enum.IntEnum):

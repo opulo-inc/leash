@@ -4,7 +4,7 @@ import time
 import serial
 import serial.tools.list_ports
 
-from src.leash import log
+from leash.utils import log
 
 
 class SerialManager:

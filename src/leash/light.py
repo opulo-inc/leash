@@ -1,4 +1,4 @@
-from src.leash import SerialManager
+from leash.serial import SerialManager
 
 
 class Light:

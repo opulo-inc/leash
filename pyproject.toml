@@ -13,6 +13,9 @@ dependencies = [
     "opencv-python>=4.10.0.84",
     "pyserial>=3.5",
 ]
+packages = [
+    { include = "leash", from = "src" },
+]
 
 [project.urls]
 Documentation = "https://github.com/unknown/leash#readme"
