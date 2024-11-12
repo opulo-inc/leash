@@ -12,7 +12,6 @@ class Pump():
         self.log = log
 
     def getPressure(self):
-
         
             try:
                 if self.index == "LEFT":

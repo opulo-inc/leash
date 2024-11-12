@@ -12,7 +12,6 @@ from .serial import SerialManager
 from .photon import Photon
 from .camera import Camera
 from .pump import Pump
-from .light import Light
 
 """Lumen object, containing all other subsystems
 """
@@ -29,9 +28,6 @@ class Lumen():
         self.leftPump = Pump("LEFT", self.sm, self.log)
         self.rightPump = Pump("RIGHT", self.sm, self.log)
 
-        self.topLight = Light("TOP", self.sm, self.log)
-        self.botLight = Light("BOT", self.sm, self.log)
-
         self.position = {
             "x": None, 
             "y": None,
@@ -40,11 +36,11 @@ class Lumen():
             "b": 0
         }
 
-        if topCam:
-            self.topCam = Camera(0)
+        if topCam is not False:
+            self.topCam = Camera(topCam)
 
-        if botCam:
-            self.botCam = Camera(1)
+        if botCam is not False:
+            self.botCam = Camera(botCam)
 
 
         self._bootCommands = [
@@ -158,8 +154,8 @@ class Lumen():
         self.leftPump.off()
         self.rightPump.off()
 
-        self.topLight.off()
-        self.botLight.off()
+        self.lightOff("TOP")
+        self.lightOff("BOT")
 
         self.safeZ()
 
@@ -206,7 +202,7 @@ class Lumen():
 
     def probe(self, nozzle, startZ = None):
         # this function moves a given nozzle down until it detects a pressure change. it returns the XYZ position of the probed point
-        if nozzle == "LEFT":
+        if nozzle == "left":
 
             if startZ is not None:
                 self.goto(z=startZ)
@@ -265,13 +261,24 @@ class Lumen():
             self.leftPump.off()
             return False
             
-            
-    
 
-        elif nozzle == "RIGHT":
-            self.rightPump.on()
+        elif nozzle == "right":
+            # todo implement for right tip
+            pass
 
 
         else:
-            self.log.error("probe() requires a nozzle of option either LEFT or RIGHT")
+            self.log.error("probe() requires a nozzle of option either 'left' or 'right'")
 
+# LEDS
+
+    def lightOff(self, index):
+        s = 0 if index == "BOT" else 1
+
+        self.sm.send(f"M150 P0 R0 U0 B0 S{s}")
+
+    def lightOn(self, index, r=255, g=255, b=255, a=255):
+
+        s = 0 if index == "BOT" else 1
+
+        self.sm.send(f"M150 P{a} R{r} U{g} B{b} S{s}")
