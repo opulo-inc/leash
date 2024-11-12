@@ -188,7 +188,7 @@ class Photon():
 
         self.log.info("Requesting " + str(tenths) + " feed from address: " + str(address))
 
-        resp = self.sendPacket(address, Commands.MOVE_FEED_FORWARD, payload = tenths)
+        resp = self.sendPacket(address, Commands.MOVE_FEED_FORWARD, payload = [tenths])
 
         if resp[0] == 0x00:
             return True

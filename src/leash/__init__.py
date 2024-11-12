@@ -282,3 +282,5 @@ class Lumen():
         s = 0 if index == "BOT" else 1
 
         self.sm.send(f"M150 P{a} R{r} U{g} B{b} S{s}")
+
+        print("turned on light yo")
