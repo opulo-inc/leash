@@ -197,7 +197,7 @@ class Photon():
 
     def moveFeedBackward(self, address, tenths):
 
-        resp = self.sendPacket(address, Commands.MOVE_FEED_BACKWARD, payload = tenths)
+        resp = self.sendPacket(address, Commands.MOVE_FEED_BACKWARD, payload = [tenths])
 
         if resp[0] == 0x00:
             return True
