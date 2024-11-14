@@ -1,11 +1,8 @@
 [project]
 name = "leash"
-dynamic = ["version"]
-description = 'Control API for the LumenPnP'
+version = "0.1.0"
+description = "Control API for the LumenPnP"
 readme = "README.md"
-requires-python = ">=3.9"
-license = {text = "MPLv2"}
-keywords = []
 authors = [
     { name = "Stephen Hawes", email = "sphawes@gmail.com" },
 ]
@@ -13,17 +10,7 @@ dependencies = [
     "opencv-python>=4.10.0.84",
     "pyserial>=3.5",
 ]
-packages = [
-    { include = "leash", from = "src" },
-]
 
-[project.urls]
-Documentation = "https://github.com/unknown/leash#readme"
-Issues = "https://github.com/unknown/leash/issues"
-Source = "https://github.com/unknown/leash"
-
-[dependency-groups]
-dev = [
-    "ruff>=0.7.1",
-    "pytest>=8.3.3",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
