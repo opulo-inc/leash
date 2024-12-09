@@ -34,6 +34,12 @@ if lumen.connect():
     try:
         lumen.home()
 
+        # Setting speed in mm/min linear travel speed
+        lumen.setSpeed(f=40000)
+
+        # sending arbitrary gcode (in this example bumping current of right toolhead to 300ma)
+        lumen.sm.send("M906 B300")
+
         # .goto() sends a move command with any optional arguments x, y, z, a, and b
         lumen.goto(x=10 y=10)
         lumen.goto(z=20)
@@ -76,18 +82,21 @@ if lumen.connect():
 
         # Ring Lights
 
-        lumen.topLight.on(218, 165, 32, 255)
+        lumen.lightOn("TOP", 218, 165, 32, 255)
         lumen.sleep(1)
-        lumen.topLight.off()
+        lumen.lightOff("TOP")
 
-        lumen.botLight.on(218, 165, 32, 255)
+        lumen.lightOn("BOT", 218, 165, 32, 255)
         lumen.sleep(1)
-        lumen.botLight.off()
+        lumen.lightOff("BOT")
 
         # Feeders
 
         lumen.photon.scan()
         print(lumen.photon.activeFeeders)
+
+        # lumen.idle() disables all pumps, valves, lights, and jogs the machine back and out of the way
+        lumen.idle()
     
     except KeyboardInterrupt:
         lumen.idle()
